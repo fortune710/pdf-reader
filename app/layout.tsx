@@ -7,6 +7,7 @@ import QueryProvider from '@/components/providers/query-provider'
 import { ComponentType, ReactNode } from 'react';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'PDF Reader',
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {composeProviders(providers, children)}
+        <Toaster/>
       </body>
     </html>
   )
