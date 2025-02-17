@@ -8,7 +8,8 @@ export async function getAllDocuments() {
             },
             select: {
                 id: true,
-                title: true
+                title: true,
+                created_at: true
             }
         })
         
