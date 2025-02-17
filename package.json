@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "generate-schema": "npx prisma generate",
@@ -67,7 +67,7 @@
     "react-dom": "^18",
     "react-dropzone": "latest",
     "react-hook-form": "^7.54.1",
-    "react-pdf": "latest",
+    "react-pdf": "8.0.2",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sonner": "^1.7.1",
