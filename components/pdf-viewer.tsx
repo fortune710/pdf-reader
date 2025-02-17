@@ -26,6 +26,7 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
   const [numPages, setNumPages] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [voicePickerOpen, setVoicePickerOpen] = useState(false);
+  const [pageText, setPageText] = useState("");
 
   //Stored page number as query param to ensure user stays on page even after page refresh
   const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1));
@@ -35,12 +36,11 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
 
   const isMobile = useIsMobile();
 
-  const [pageText, setPageText] = useState("");
   const { isPlaying, isLoading, handleAudioPlayback } = useTTS({
     pageNumber,
     pageText,
     documentId,
-    voice: voice || DEFAULT_VOICE,
+    voice: voice ?? DEFAULT_VOICE,
     tempertaure: 0
   })
 
@@ -104,9 +104,12 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
       <section className="flex items-center justify-center mt-4 space-x-4 bg-white w-4/5 px-3 py-2.5 border-input border rounded-md">
         <Tooltip>
           <TooltipTrigger asChild>
+            {/* Button is not disabled while loading to allow tooltip 
+            to be shown, but is prevent from being called inside the handleAudioPlayback function
+            to prevent any action from beign taken during loading */}
             <Button 
               onClick={handleAudioPlayback} 
-              disabled={isLoading}
+              //disabled={isLoading}
               size="icon" 
               className="rounded-full w-12 h-12"
             >
@@ -119,6 +122,7 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
           </TooltipTrigger>
           <TooltipContent>
             {
+              isLoading ? <p>Audio is Loading for this Page</p> :
               isPlaying ? <p>Pause</p> :
               <p>Play</p>
             }
