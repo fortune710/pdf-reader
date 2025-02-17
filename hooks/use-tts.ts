@@ -229,7 +229,7 @@ export default function useTTS(data: TTSData) {
     }
 
     const handleAudioPlayback = () => {
-        if (isLoading) return
+        if (isLoading || (isFetching && !isReady)) return
         
         if (isPlaying) {
             pause()
