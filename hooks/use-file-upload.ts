@@ -9,7 +9,7 @@ export default function useFileUpload() {
     //Environment variable to support file upload as been provided 
     // and does not need to be passed in upload funtion
     async function uploadFile(file: File) {
-        const filePath = `/pdfs/${file.name}`
+        const filePath = `pdfs/${file.name}`
 
         //Upload file to server
         const newBlob = await upload(filePath, file, {
@@ -21,7 +21,7 @@ export default function useFileUpload() {
         //Made separate calls in order to get the document id for client side navigation
         const document = await createDocument(
             file.name, // Use filename as title
-            newBlob.pathname // Store blob URL as key
+            newBlob.url // Store blob URL as key
         )
         
         return {
