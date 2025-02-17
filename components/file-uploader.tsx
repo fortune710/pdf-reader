@@ -35,7 +35,7 @@ export default function FileUploader() {
     try {
       const { documentId } = await uploadFile(file)
       console.log({ file, documentId })
-      return router.push(`/view/${documentId}`);
+      return router.push(`/view/${documentId}?current_page=1`);
     } catch (error: any) {
       return toast({
         title: "Error Uploading File",

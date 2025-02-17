@@ -11,6 +11,7 @@ import useTTS from "@/hooks/use-tts";
 import PDFViewerLoading from "@/components/pdf-viewer-loading";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import LoadingSpinner from "./loading-spinner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -24,7 +25,9 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
   const [error, setError] = useState<string | null>(null);
 
   //Stored page number as query param to ensure user stays on page even after page refresh
-  const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1))
+  const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1));
+
+  const isMobile = useIsMobile();
 
   const [pageText, setPageText] = useState("");
   const { play, pause, isPlaying, isLoading, handleAudioPlayback } = useTTS({
@@ -72,13 +75,13 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
         onLoadError={onDocumentLoadError}
       >
         {/* Added container div to ensure PDF has max height and is scrollable */}
-        <div className="h-[500px] overflow-y-auto border border-input rounded-sm w-4/5 mx-auto">
+        <div className="h-[500px] overflow-y-auto border border-input rounded-sm max-sm:w-full w-4/5 mx-auto">
           <Page 
             className="w-full" 
             renderAnnotationLayer={false} 
             renderTextLayer 
             height={350}
-            width={500}
+            width={isMobile ? 380 : 500}
             scale={1}
             onGetTextSuccess={(content) => compilePageText(content.items as Array<{ str: string }>)} 
             pageNumber={pageNumber} 
