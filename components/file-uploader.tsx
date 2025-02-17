@@ -7,6 +7,8 @@ import { Upload, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import useFileUpload from "@/hooks/use-file-upload"
 import { useToast } from "@/hooks/use-toast"
+import Image from "next/image"
+import { cn } from "@/lib/utils"
 
 export default function FileUploader() {
   const [file, setFile] = useState<File | null>(null)
@@ -46,12 +48,16 @@ export default function FileUploader() {
     <div className="w-full max-w-md">
       <div
         {...getRootProps()}
-        className={`p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
-          isDragActive ? "border-purple-400 bg-purple-100" : "border-gray-300 hover:border-purple-400"
-        }`}
+        className={cn("p-14 border border-dashed rounded-lg text-center cursor-pointer transition-colors", isDragActive ? "border-purple-400 bg-purple-100" : "border-gray-300 hover:border-purple-400")}
       >
         <input {...getInputProps()} />
-        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+        <Image 
+          src="/document-upload.svg" 
+          alt="Document Upload"
+          width={40}
+          height={40}
+          className="mx-auto"
+        />
         <p className="mt-2 text-sm text-gray-600">Drag &amp; drop a PDF file here, or click to select one</p>
       </div>
       {file && (
