@@ -1,6 +1,6 @@
 # PDF Reader with Text-to-Speech
 
-A web application that allows users to read PDFs page by page with integrated Text-to-Speech (TTS) functionality for audio playback.
+A web application that allows users to read PDFs page by page with integrated Text-to-Speech (TTS) functionality for audio playback using the PlayAI TTS Web API.
 
 ## Features
 
