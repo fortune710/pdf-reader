@@ -71,8 +71,10 @@ yarn dev
 
 ## Design Decisions
 
-1. [Your design decision #1]
-2. [Your design decision #2]
-3. [Your design decision #3]
+1. **Usage of Server and Client Components**: I used server components for top level pages for better initial page load, and used client components for more interactive and user facing features, as that is where client components shine. I also used dynamic imports (aka lazy loading) to help split app bundle size into smaller chunks for better initial page load and reduced build times.
+
+2. **Preloading of Audio Data**: When a user moves to a new page, once the text ha been parsed by the PDF viewer it attempts to start fetching the audio bundle before the play button is pressed. This woule ensure the audio is ready once the user is ready to use the TTS feature. Although this comes at a cost of an extra call to download audio that the user does not not play, but since the text on the page is large, preloading improves UX. 
+
+3. **File Upload UI**: To improve UX, I leveraged a drag and drop library to help users drag files they might already be looking at instead of having to click and search for a file in their File Explorer (or Finder)
 ...
 
