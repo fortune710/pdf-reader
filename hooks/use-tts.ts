@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import axios from "axios"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 
 interface TTSData {
     pageNumber: number,
@@ -13,93 +12,237 @@ interface TTSData {
 export default function useTTS(data: TTSData) {
     const { pageNumber, pageText, documentId, voice, tempertaure } = data
     const audioContext = useRef<AudioContext | null>(null)
-    const sourceNode = useRef<AudioBufferSourceNode | null>(null)
+    const mediaSource = useRef<MediaSource | null>(null)
+    const audioElement = useRef<HTMLAudioElement | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
+    const [isReady, setIsReady] = useState(false)
+    const [progress, setProgress] = useState(0)
+    const abortControllerRef = useRef<AbortController | null>(null)
+    const audioQueue = useRef<Uint8Array[]>([])
+    const sourceBuffer = useRef<SourceBuffer | null>(null)
+    const audioUrl = useRef<string | null>(null)
 
     const tempertaureSetting = String(tempertaure) || "DEFAULT"
 
-    
+    // Initialize audio elements
+    useEffect(() => {
+        if (!audioElement.current) {
+            audioElement.current = new Audio()
+            audioElement.current.addEventListener('ended', () => {
+                setIsPlaying(false)
+            })
+            audioElement.current.addEventListener('pause', () => {
+                setIsPlaying(false)
+            })
+            audioElement.current.addEventListener('play', () => {
+                setIsPlaying(true)
+            })
+        }
 
-    const { isLoading, refetch, isFetching } = useQuery({
+        return () => {
+            if (audioUrl.current) {
+                URL.revokeObjectURL(audioUrl.current)
+            }
+        }
+    }, [])
+
+    const { isLoading, isFetching, refetch } = useQuery({
         queryKey: ['tts', pageNumber, documentId, voice, tempertaureSetting],
         queryFn: async () => {
-            // Create AudioContext on first play
-            if (!audioContext.current) {
-                audioContext.current = new AudioContext()
+            // Reset state
+            setIsReady(false)
+            setProgress(0)
+            audioQueue.current = []
+            
+            if (audioUrl.current) {
+                URL.revokeObjectURL(audioUrl.current)
+                audioUrl.current = null
             }
-
-            const response = await axios.post("https://api.play.ai/api/v1/tts/stream", {
-                text: pageText,
-                model: "PlayDialog",
-                voice: "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json"
-            }, {
-                headers: {
-                    Authorization: process.env.NEXT_PUBLIC_PLAY_AI_KEY,
-                    'X-USER-ID': process.env.NEXT_PUBLIC_USER_ID,
-                    "Content-Type": "application/json"
-                },
-                responseType: 'arraybuffer'
-            })
-
-            const audioData = response.data
-            const audioBuffer = await audioContext.current.decodeAudioData(audioData)
             
-            console.log(audioData, audioBuffer)
-            // Create and configure source node
-            sourceNode.current = audioContext.current.createBufferSource()
-            sourceNode.current.buffer = audioBuffer
-            sourceNode.current.connect(audioContext.current.destination)
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort()
+            }
+            abortControllerRef.current = new AbortController()
             
-            return audioBuffer
+            try {
+                //TODO: Try to get the audio to start playing once bytes are available
+                const response = await fetch("https://api.play.ai/api/v1/tts/stream", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        text: pageText,
+                        model: "PlayDialog",
+                        voice: "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json"
+                    }),
+                    headers: {
+                        'Authorization': process.env.NEXT_PUBLIC_PLAY_AI_KEY || '',
+                        'X-USER-ID': process.env.NEXT_PUBLIC_USER_ID || '',
+                        "Content-Type": "application/json",
+                        "Accept": "audio/mpeg"
+                    },
+                    signal: abortControllerRef.current.signal
+                })
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
+
+                if (!response.body) {
+                    throw new Error("Response body is null")
+                }
+
+                // Create a new Blob to hold the audio data
+                const audioChunks: Uint8Array[] = []
+                const reader = response.body.getReader()
+                
+                // Read and process the stream
+                while (true) {
+                    const { done, value } = await reader.read()
+                    
+                    if (done) {
+                        break
+                    }
+                    
+                    audioChunks.push(value)
+                    audioQueue.current.push(value)
+                    
+                    // Update progress
+                    setProgress(audioChunks.length)
+                    
+                    // If this is the first chunk, we can prepare for playing
+                    if (audioChunks.length === 1) {
+                        // Create a blob from the chunks we have so far
+                        const blob = new Blob(audioChunks, { type: 'audio/mpeg' })
+                        audioUrl.current = URL.createObjectURL(blob)
+                        
+                        if (audioElement.current) {
+                            audioElement.current.src = audioUrl.current
+                            audioElement.current.load()
+                            setIsReady(true)
+                        }
+                    } else if (isReady && isPlaying) {
+                        // If we're already playing, we need to update the audio source
+                        // This is a bit tricky with native Audio elements, so we'll
+                        // just create a new blob with all chunks received so far
+                        const blob = new Blob(audioChunks, { type: 'audio/mpeg' })
+                        
+                        // Remember the current position
+                        const currentTime = audioElement.current?.currentTime || 0
+                        
+                        // Update the audio source
+                        if (audioUrl.current) {
+                            URL.revokeObjectURL(audioUrl.current)
+                        }
+                        audioUrl.current = URL.createObjectURL(blob)
+                        
+                        if (audioElement.current) {
+                            const wasPlaying = !audioElement.current.paused
+                            audioElement.current.src = audioUrl.current
+                            audioElement.current.load()
+                            audioElement.current.currentTime = currentTime
+                            
+                            if (wasPlaying) {
+                                audioElement.current.play().catch(console.error)
+                            }
+                        }
+                    }
+                }
+                
+                // Create the final audio blob
+                const finalBlob = new Blob(audioChunks, { type: 'audio/mpeg' })
+                
+                if (audioUrl.current) {
+                    URL.revokeObjectURL(audioUrl.current)
+                }
+                audioUrl.current = URL.createObjectURL(finalBlob)
+                
+                if (audioElement.current) {
+                    // Remember the current position
+                    const currentTime = audioElement.current.currentTime || 0
+                    const wasPlaying = !audioElement.current.paused
+                    
+                    audioElement.current.src = audioUrl.current
+                    audioElement.current.load()
+                    audioElement.current.currentTime = currentTime
+                    
+                    if (wasPlaying) {
+                        audioElement.current.play().catch(console.error)
+                    }
+                }
+                
+                return true
+            } catch (error) {
+                if ((error as Error).name === 'AbortError') {
+                    console.log('Fetch aborted')
+                } else {
+                    console.error('Fetch error:', error)
+                }
+                return false
+            }
         },
-        enabled: !!pageText
+        enabled: !!pageText,
     })
 
     const play = async () => {
-        if (!sourceNode.current || !audioContext.current) {
+        if (isPlaying) return
+        
+        if (!isReady) {
             await refetch()
+            return
         }
         
-        if (audioContext.current?.state === 'suspended') {
-            await audioContext.current.resume()
-        }
-
-        if (sourceNode.current && !isPlaying) {
-            sourceNode.current.start()
-            setIsPlaying(true)
+        if (audioElement.current) {
+            try {
+                await audioElement.current.play()
+                setIsPlaying(true)
+            } catch (error) {
+                console.error('Error playing audio:', error)
+            }
         }
     }
 
     const pause = () => {
-        if (audioContext.current && isPlaying) {
-            audioContext.current.suspend()
-            setIsPlaying(false)
-        }
+        if (!isPlaying || !audioElement.current) return
+        
+        audioElement.current.pause()
+        setIsPlaying(false)
     }
 
     const stop = () => {
-        if (sourceNode.current) {
-            sourceNode.current.stop()
-            sourceNode.current.disconnect()
-            sourceNode.current = null
-            setIsPlaying(false)
+        if (audioElement.current) {
+            audioElement.current.pause()
+            audioElement.current.currentTime = 0
         }
+        
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+        }
+        
+        if (audioUrl.current) {
+            URL.revokeObjectURL(audioUrl.current)
+            audioUrl.current = null
+        }
+        
+        audioQueue.current = []
+        setIsPlaying(false)
+        setIsReady(false)
+        setProgress(0)
     }
 
     const handleAudioPlayback = () => {
-        if (isLoading) return;
+        if (isLoading) return
         
         if (isPlaying) {
-            pause();
+            pause()
         } else {
-            play();
+            play()
         }
-
     }
 
     return {
-        isLoading: isLoading || isFetching,
+        isLoading: isLoading || (isFetching && !isReady),
         isPlaying,
+        isReady,
+        progress,
         play,
         pause,
         stop,
