@@ -12,6 +12,7 @@ import PDFViewerLoading from "@/components/pdf-viewer-loading";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import LoadingSpinner from "./loading-spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { VoicePicker } from "./voice-picker";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -19,28 +20,38 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+const DEFAULT_VOICE = "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json"
 
-export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
+export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, documentId: string }) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
 
   //Stored page number as query param to ensure user stays on page even after page refresh
   const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1));
 
+  //Stored voice as query param to it persists on page refresh
+  const [voice, setVoice] = useQueryState("current_voice");
+
   const isMobile = useIsMobile();
 
   const [pageText, setPageText] = useState("");
-  const { play, pause, isPlaying, isLoading, handleAudioPlayback } = useTTS({
+  const { isPlaying, isLoading, handleAudioPlayback } = useTTS({
     pageNumber,
     pageText,
-    documentId: "1",
-    voice: "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json",
+    documentId,
+    voice: voice || DEFAULT_VOICE,
     tempertaure: 0
   })
 
   function compilePageText(textItems: Array<{ str: string }>) {
     const mergedText = mergeTextItems(textItems);
     return setPageText(mergedText);
+  }
+
+  function selectVoice(voice: string) {
+    setVoicePickerOpen(false);
+    return setVoice(voice);
   }
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
@@ -91,28 +102,28 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
 
 
       <section className="flex items-center justify-center mt-4 space-x-4 bg-white w-4/5 px-3 py-2.5 border-input border rounded-md">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button 
-            onClick={handleAudioPlayback} 
-            disabled={isLoading}
-            size="icon" 
-            className="rounded-full w-12 h-12"
-          >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              onClick={handleAudioPlayback} 
+              disabled={isLoading}
+              size="icon" 
+              className="rounded-full w-12 h-12"
+            >
+              {
+                isLoading ? <LoadingSpinner/> :
+                isPlaying ? <Pause className="size-4" /> :
+                <Play className="size-4"/>
+              }
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
             {
-              isLoading ? <LoadingSpinner/> :
-              isPlaying ? <Pause className="size-4" /> :
-              <Play className="size-4"/>
+              isPlaying ? <p>Pause</p> :
+              <p>Play</p>
             }
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {
-            isPlaying ? <p>Pause</p> :
-            <p>Play</p>
-          }
-        </TooltipContent>
-      </Tooltip>
+          </TooltipContent>
+        </Tooltip>
 
         <div className="flex items-center gap-4 px-2 py-1.5 bg-zinc-900 rounded-3xl text-white">
           <Tooltip>
@@ -155,6 +166,12 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
             </TooltipContent>
           </Tooltip>
         </div>
+
+        <VoicePicker
+          open={voicePickerOpen}
+          onOpenChange={setVoicePickerOpen}
+          onSelect={selectVoice}
+        />
       </section>
     </div>
   )

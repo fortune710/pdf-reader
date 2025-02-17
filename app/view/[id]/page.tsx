@@ -43,7 +43,10 @@ export default async function ViewPDF({ params }: { params: { id: string } }) {
       <main className="flex min-h-screen flex-col items-center justify-center max-sm:px-0 p-12 bg-zinc-100/50">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">PDF Viewer</h1>
         <div className="rounded-sm max-md:px-4 w-full max-w-2xl">
-          <PDFViewer fileUrl={url} />
+          <PDFViewer 
+            documentId={params.id} 
+            fileUrl={url} 
+          />
         </div>
       </main>
     )
