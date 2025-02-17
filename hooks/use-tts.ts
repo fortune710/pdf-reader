@@ -71,7 +71,7 @@ export default function useTTS(data: TTSData) {
                     body: JSON.stringify({
                         text: pageText,
                         model: "PlayDialog",
-                        voice: "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json"
+                        voice
                     }),
                     headers: {
                         'Authorization': process.env.NEXT_PUBLIC_PLAY_AI_KEY || '',
