@@ -11,15 +11,12 @@ interface TTSData {
 
 export default function useTTS(data: TTSData) {
     const { pageNumber, pageText, documentId, voice, tempertaure } = data
-    const audioContext = useRef<AudioContext | null>(null)
-    const mediaSource = useRef<MediaSource | null>(null)
     const audioElement = useRef<HTMLAudioElement | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
     const [isReady, setIsReady] = useState(false)
     const [progress, setProgress] = useState(0)
     const abortControllerRef = useRef<AbortController | null>(null)
     const audioQueue = useRef<Uint8Array[]>([])
-    const sourceBuffer = useRef<SourceBuffer | null>(null)
     const audioUrl = useRef<string | null>(null)
 
     const tempertaureSetting = String(tempertaure) || "DEFAULT"
