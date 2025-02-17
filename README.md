@@ -76,5 +76,10 @@ yarn dev
 2. **Preloading of Audio Data**: When a user moves to a new page, once the text ha been parsed by the PDF viewer it attempts to start fetching the audio bundle before the play button is pressed. This woule ensure the audio is ready once the user is ready to use the TTS feature. Although this comes at a cost of an extra call to download audio that the user does not not play, but since the text on the page is large, preloading improves UX. 
 
 3. **File Upload UI**: To improve UX, I leveraged a drag and drop library to help users drag files they might already be looking at instead of having to click and search for a file in their File Explorer (or Finder)
-...
+
+4. **Separation of Concerns**: Specific functionality like file uploads and TTS/audio playback where handled in a custom hook rather than the components body to improve scalability and readbility.
+
+
+## Known Issues
+1. Audio Playback may not be functional after page refresh on same PDF page.
 
