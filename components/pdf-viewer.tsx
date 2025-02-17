@@ -9,6 +9,8 @@ import { mergeTextItems } from "@/utils/functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import useTTS from "@/hooks/use-tts";
 import PDFViewerLoading from "@/components/pdf-viewer-loading";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import LoadingSpinner from "./loading-spinner";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -86,43 +88,69 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
 
 
       <section className="flex items-center justify-center mt-4 space-x-4 bg-white w-4/5 px-3 py-2.5 border-input border rounded-md">
-        <Button 
-          onClick={handleAudioPlayback} 
-          //disabled={isLoading}
-          size="icon" 
-          className="rounded-full"
-        >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            onClick={handleAudioPlayback} 
+            disabled={isLoading}
+            size="icon" 
+            className="rounded-full w-12 h-12"
+          >
+            {
+              isLoading ? <LoadingSpinner/> :
+              isPlaying ? <Pause className="size-4" /> :
+              <Play className="size-4"/>
+            }
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
           {
-            isLoading ? <Dot className="size-4"/> :
-            isPlaying ? <Pause className="size-4" /> :
-            <Play className="size-4"/>
+            isPlaying ? <p>Pause</p> :
+            <p>Play</p>
           }
-        </Button>
+        </TooltipContent>
+      </Tooltip>
 
         <div className="flex items-center gap-4 px-2 py-1.5 bg-zinc-900 rounded-3xl text-white">
-          <Button 
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="icon"
+                variant="ghost"
+                className="rounded-full"
+                onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Previous</p>
+            </TooltipContent>
+          </Tooltip>
           {
             !numPages ? <Skeleton className="h-4 w-[80px]" /> :
             <p className="text-sm">
               Page {pageNumber} of {numPages}
             </p>
           }
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onClick={() => setPageNumber((prev) => Math.min(prev + 1, numPages || 1))}
-            disabled={pageNumber >= (numPages || 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="rounded-full"
+                onClick={() => setPageNumber((prev) => Math.min(prev + 1, numPages || 1))}
+                disabled={pageNumber >= (numPages || 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent>
+              <p>Next</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </section>
     </div>

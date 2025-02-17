@@ -50,8 +50,8 @@ export default async function ViewPDF({ params }: { params: { id: string } }) {
     )
   } catch (error) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-        <div className="bg-white p-8 rounded-lg shadow-lg">
+      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-zinc-100/50">
+        <div className="bg-white p-8 rounded-sm border border-input">
           <h1 className="text-3xl font-bold mb-6 text-center text-red-500">Error</h1>
           <p className="text-center">Failed to load PDF. Please try again.</p>
         </div>
