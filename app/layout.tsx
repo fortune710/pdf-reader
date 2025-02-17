@@ -4,12 +4,31 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import './globals.css'
 import QueryProvider from '@/components/providers/query-provider'
+import { ComponentType, ReactNode } from 'react';
+import { ThemeProvider } from '@/components/providers/theme-provider';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'PDF Reader',
+  description: 'Created by Fortune Alebiosu',
 }
+
+type ProviderComponent = ComponentType<{ children: ReactNode }>;
+
+
+//Used composition to have multiple providers into single function
+//improving scalability
+export const composeProviders = (
+  providers: ProviderComponent[],
+  children: ReactNode
+): React.ReactElement => {
+  return providers.reduceRight(
+    (acc, Provider) => <Provider>{acc}</Provider>,
+    children as React.ReactElement
+  );
+};
+
+const providers = [QueryProvider, NuqsAdapter, ThemeProvider, TooltipProvider]
 
 export default function RootLayout({
   children,
@@ -19,9 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </QueryProvider>
+        {composeProviders(providers, children)}
       </body>
     </html>
   )
