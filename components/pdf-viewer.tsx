@@ -101,7 +101,7 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
       </Document>
 
 
-      <section className="flex items-center justify-center mt-4 space-x-4 bg-white w-4/5 px-3 py-2.5 border-input border rounded-md">
+      <section className="flex items-center justify-center mt-4 space-x-4 bg-white max-sm:w-full w-4/5 px-3 py-2.5 border-input border rounded-md">
         <Tooltip>
           <TooltipTrigger asChild>
             {/* Button is not disabled while loading to allow tooltip 
@@ -111,6 +111,7 @@ export default function PDFViewer({ fileUrl, documentId }: { fileUrl: string, do
               onClick={handleAudioPlayback} 
               //disabled={isLoading}
               size="icon" 
+              variant="outline"
               className="rounded-full w-12 h-12"
             >
               {
