@@ -1,8 +1,14 @@
 import PreviousDocs from "@/components/previous-docs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getAllDocuments } from "@/server/documents";
 import dynamic from "next/dynamic";
 
-const FileUploader = dynamic(() => import("@/components/file-uploader"), { ssr: false });
+const FileUploader = dynamic(() => import("@/components/file-uploader"), { 
+  ssr: false,
+  loading: ()  => (
+    <Skeleton className="w-[310px] h-52 md:w-[500px] md:h-56"/>
+  )
+});
 
 
 export default async function Home() {
