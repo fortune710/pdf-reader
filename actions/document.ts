@@ -22,3 +22,18 @@ export async function createDocument(title: string, key: string) {
         throw new Error('Failed to create document')
     }
 }
+
+export async function deleteDocument(id: string) {
+    try {
+        await db.document.delete({
+            where: {
+                id
+            }
+        })
+        
+        return { success: true }
+    } catch (error) {
+        console.error('Error deleting document:', error)
+        throw new Error('Failed to delete document')
+    }
+}
