@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const FileUploader = dynamic(() => import("@/components/FileUploader"), { ssr: false });
+const FileUploader = dynamic(() => import("@/components/file-uploader"), { ssr: false });
 
 
 export default function Home() {

@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Dot, Pause, Play } from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs"
 import { mergeTextItems } from "@/utils/functions";
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import useTTS from "@/hooks/use-tts";
+import PDFViewerLoading from "@/components/pdf-viewer-loading";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -15,14 +16,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-//pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
-
-
 
 export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
-  const [numPages, setNumPages] = useState<number | null>(null)
-  const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1))
+  const [numPages, setNumPages] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  //Stored page number as query param to ensure user stays on page even after page refresh
+  const [pageNumber, setPageNumber] = useQueryState("current_page", parseAsInteger.withDefault(1))
 
   const [pageText, setPageText] = useState("");
   const { play, pause, isPlaying, isLoading, handleAudioPlayback } = useTTS({
@@ -49,19 +49,28 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
   }
 
 
+  //If there is an error rendering PDF, display it
+  if (error) {
+    return <div className="text-red-500">{error}</div>
+  }
 
-  // if (error) {
-  //   return <div className="text-red-500">{error}</div>
-  // }
-
+  //If PDF is still loading URL
   if (!fileUrl) {
-    return <div>Loading...</div>
+    return <PDFViewerLoading/>
   }
 
   return (
     <div className="flex flex-col items-center">
-      <Document renderMode="none" className="w-full"  file={fileUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={onDocumentLoadError}>
-        <div className="h-[500px] overflow-y-auto border border-red-500 w-full mx-auto">
+      <Document 
+        renderMode="none" 
+        className="w-full"  
+        file={fileUrl} 
+        loading={<PDFViewerLoading/>}
+        onLoadSuccess={onDocumentLoadSuccess} 
+        onLoadError={onDocumentLoadError}
+      >
+        {/* Added container div to ensure PDF has max height and is scrollable */}
+        <div className="h-[500px] overflow-y-auto border border-input rounded-sm w-4/5 mx-auto">
           <Page 
             className="w-full" 
             renderAnnotationLayer={false} 
@@ -69,16 +78,17 @@ export default function PDFViewer({ fileUrl }: { fileUrl: string }) {
             height={350}
             width={500}
             scale={1}
-            //onLoadSuccess={removeTextLayerOffset}
             onGetTextSuccess={(content) => compilePageText(content.items as Array<{ str: string }>)} 
             pageNumber={pageNumber} 
           />
         </div>
       </Document>
-      <section className="flex items-center justify-center mt-4 space-x-4">
+
+
+      <section className="flex items-center justify-center mt-4 space-x-4 bg-white w-4/5 px-3 py-2.5 border-input border rounded-md">
         <Button 
           onClick={handleAudioPlayback} 
-          disabled={isLoading}
+          //disabled={isLoading}
           size="icon" 
           className="rounded-full"
         >

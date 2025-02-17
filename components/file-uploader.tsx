@@ -29,8 +29,10 @@ export default function FileUploader() {
   const handleUpload = async () => {
     if (!file) return
 
+    
     try {
       const { documentId } = await uploadFile(file)
+      console.log({ file, documentId })
       return router.push(`/view/${documentId}`);
     } catch (error: any) {
       return toast({

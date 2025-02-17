@@ -1,7 +1,15 @@
 import dynamic from "next/dynamic"
 import { getFileUrl } from "@/server/file"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const PDFViewer = dynamic(() => import("@/components/PDFViewer"), { ssr: false })
+const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), { 
+  loading: () => (
+    <div className="border border-input">
+      <Skeleton className="w-4/5 h-[500px] rounded-sm mx-auto" />
+    </div>
+  ),
+  ssr: false 
+})
 
 if (typeof Promise.withResolvers === "undefined") {
   if (typeof window !== 'undefined') {
@@ -35,7 +43,7 @@ export default async function ViewPDF({ params }: { params: { id: string } }) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-zinc-100/50">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">PDF Viewer</h1>
-        <div className="p-1.5 bg-white rounded-sm w-full max-w-2xl border border-muted">
+        <div className="rounded-sm w-full max-w-2xl">
           <PDFViewer fileUrl={url} />
         </div>
       </main>
