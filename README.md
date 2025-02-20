@@ -43,7 +43,7 @@ BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
 1. Clone the repository:
 
 ```bash
-git clone [repository-url]
+git clone https://github.com/fortune710/pdf-reader.git
 cd pdf-viewer
 ```
 
